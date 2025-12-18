@@ -1,0 +1,89 @@
+{% extends 'sentiment_app/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<h2>Sentiment Dashboard</h2>
+
+<p><strong>Total Reviews:</strong> {{ total }}</p>
+<p><strong>Model Accuracy:</strong> {{ accuracy }}%</p>
+
+<canvas id="sentimentChart" width="400" height="300"></canvas>
+<br><br>
+
+<canvas id="learningChart" width="400" height="300"></canvas>
+<br><br>
+
+<canvas id="confusionChart" width="400" height="300"></canvas>
+
+<br>
+<a href="/">← Back to Analyze</a>
+
+<!-- Chart.js (ONLY ONCE) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- ✅ SAFE DATA PASSING -->
+<script id="dashboard-data" type="application/json">
+{
+  "positive": {{ positive|default:0 }},
+  "negative": {{ negative|default:0 }},
+  "corrected": {{ corrected|default:0 }},
+  "not_corrected": {{ not_corrected|default:0 }},
+  "tp": {{ tp|default:0 }},
+  "tn": {{ tn|default:0 }},
+  "fp": {{ fp|default:0 }},
+  "fn": {{ fn|default:0 }}
+}
+</script>
+
+<script>
+const data = JSON.parse(
+  document.getElementById("dashboard-data").textContent
+);
+
+// Sentiment Pie Chart
+new Chart(document.getElementById('sentimentChart'), {
+  type: 'pie',
+  data: {
+    labels: ['Positive', 'Negative'],
+    datasets: [{
+      data: [data.positive, data.negative],
+    }]
+  }
+});
+
+// Active Learning Chart
+new Chart(document.getElementById('learningChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Corrected', 'Not Corrected'],
+    datasets: [{
+      data: [data.corrected, data.not_corrected],
+    }]
+  },
+  options: {
+    scales: {
+      y: { beginAtZero: true }
+    }
+  }
+});
+
+// Confusion Matrix Chart
+new Chart(document.getElementById('confusionChart'), {
+  type: 'bar',
+  data: {
+    labels: ['TP', 'TN', 'FP', 'FN'],
+    datasets: [{
+      label: 'Count',
+      data: [data.tp, data.tn, data.fp, data.fn],
+    }]
+  },
+  options: {
+    scales: {
+      y: { beginAtZero: true }
+    }
+  }
+});
+</script>
+
+{% endblock %}

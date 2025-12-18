@@ -1,0 +1,17 @@
+{% extends 'sentiment_app/base.html' %}
+
+{% block content %}
+<h2>Correct the Sentiment</h2>
+
+<p><strong>Review:</strong> {{ review.text }}</p>
+
+<form method="post">
+    {% csrf_token %}
+    <select name="corrected_sentiment" required>
+        <option value="Positive">Positive</option>
+        <option value="Negative">Negative</option>
+    </select>
+    <br><br>
+    <button type="submit">Submit Correction</button>
+</form>
+{% endblock %}
