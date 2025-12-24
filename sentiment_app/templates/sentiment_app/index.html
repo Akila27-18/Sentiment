@@ -1,7 +1,9 @@
 {% extends 'sentiment_app/base.html' %}
-
+{% load static %}
 {% block content %}
-<form method="post">
+<h2>Customer Sentiment Analysis</h2>
+
+<form method="post" class="review-form">
     {% csrf_token %}
     <textarea name="review" placeholder="Enter customer review..." required></textarea>
     <br>
@@ -9,6 +11,6 @@
 </form>
 
 {% if error %}
-<p style="color:red;">{{ error }}</p>
+<p class="error-message">{{ error }}</p>
 {% endif %}
 {% endblock %}
