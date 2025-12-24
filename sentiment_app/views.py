@@ -1,6 +1,7 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import Review
 from .ml_model import predict_sentiment, train_model_from_feedback
+
 
 def index(request):
     if request.method == 'POST':
@@ -11,6 +12,7 @@ def index(request):
                 'error': 'Please enter a review'
             })
 
+        # ✅ predict_sentiment returns (sentiment, confidence)
         sentiment, confidence = predict_sentiment(text)
 
         review = Review.objects.create(
@@ -23,27 +25,25 @@ def index(request):
             'confidence': confidence
         })
 
-    # GET request (home page)
     return render(request, 'sentiment_app/index.html')
 
 
-
-from .ml_model import train_model_from_feedback
-
 def feedback(request, review_id):
-    review = Review.objects.get(id=review_id)
+    review = get_object_or_404(Review, id=review_id)
 
     if request.method == 'POST':
         review.corrected_sentiment = request.POST.get('corrected_sentiment')
         review.save()
 
-        # 🔥 Retrain using real user feedback
+        # ✅ retrain model safely
         train_model_from_feedback()
 
-        return redirect('/')
+        # ✅ use named URL (fixes NoReverseMatch)
+        return redirect('sentiment_app:index')
 
-    return render(request, 'sentiment_app/feedback.html', {'review': review})
-
+    return render(request, 'sentiment_app/feedback.html', {
+        'review': review
+    })
 
 
 def dashboard(request):
@@ -52,6 +52,7 @@ def dashboard(request):
     negative = Review.objects.filter(predicted_sentiment="Negative").count()
     corrected = Review.objects.filter(corrected_sentiment__isnull=False).count()
     not_corrected = total - corrected
+
     reviews = Review.objects.exclude(corrected_sentiment__isnull=True)
 
     tp = reviews.filter(predicted_sentiment="Positive", corrected_sentiment="Positive").count()
@@ -60,13 +61,21 @@ def dashboard(request):
     fn = reviews.filter(predicted_sentiment="Negative", corrected_sentiment="Positive").count()
 
     accuracy = model_accuracy()
+
     return render(request, 'sentiment_app/dashboard.html', {
         'total': total,
         'positive': positive,
         'negative': negative,
         'corrected': corrected,
-        'not_corrected': not_corrected
+        'not_corrected': not_corrected,
+        'tp': tp,
+        'tn': tn,
+        'fp': fp,
+        'fn': fn,
+        'accuracy': accuracy
     })
+
+
 def model_accuracy():
     reviews = Review.objects.exclude(corrected_sentiment__isnull=True)
 
@@ -78,5 +87,4 @@ def model_accuracy():
         if r.predicted_sentiment == r.corrected_sentiment:
             correct += 1
 
-    accuracy = (correct / reviews.count()) * 100
-    return round(accuracy, 2)
+    return round((correct / reviews.count()) * 100, 2)

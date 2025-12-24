@@ -1,7 +1,6 @@
 {% extends 'sentiment_app/base.html' %}
 
 {% block content %}
-
 <h2>Customer Sentiment Analysis</h2>
 
 <p><strong>Review:</strong> {{ review.text }}</p>
@@ -12,10 +11,11 @@
     <p class="sentiment negative">Sentiment: Negative 😞</p>
 {% endif %}
 
-<div class="actions">
-    <a href="/" class="btn">Analyze Another</a>
-    <!-- <a href="{% url 'index' %}">Analyze Another</a> -->
-    <a href="{% url 'sentiment_app:feedback' review.id %}" class="btn">Provide Feedback</a>
-</div>
+<p><strong>Confidence:</strong> {{ confidence }}%</p>
 
+<div class="actions">
+    <a href="{% url 'sentiment_app:index' %}" class="btn">Analyze Another</a>
+    <a href="{% url 'sentiment_app:feedback' review.id %}" class="btn">Provide Feedback</a>
+    <a href="{% url 'sentiment_app:dashboard' %}" class="btn">Dashboard</a>
+</div>
 {% endblock %}
